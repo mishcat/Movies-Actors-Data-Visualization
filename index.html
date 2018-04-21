@@ -1,0 +1,1188 @@
+<html>
+<style>
+div.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 175px;
+  height: 90px;
+  padding: 10px;
+  font: 13px "Nanum Gothic";
+  background: #567ca3;
+  border: 2px;
+  border-radius: 8px;
+  pointer-events: none;
+  color: #fff;
+
+}
+
+</style>
+<head>
+<title>CS 3300 Project 2</title>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/default.min.css">
+<link href="https://fonts.googleapis.com/css?family=Assistant" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Montserrat|Nanum+Gothic" rel="stylesheet">
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+</head>
+
+<style>
+    @font-face {
+        font-family: Riesling;
+        src: url(fonts/riesling.ttf);
+    }
+    body {
+        font-family: "Nanum Gothic", sans-serif;
+        background-color:#efefef;
+    }
+
+    #option input{
+        background-color: #a6acb5;
+        border: #a6acb5 2px solid;
+        border-radius: 25px;
+        font-family:"Nanum Gothic", sans-serif;
+        font-size:20px;
+        outline:none;
+        cursor:pointer;
+
+    }
+
+    #option input:hover {
+        background-color: "blue";
+    }
+
+    #wrapper {
+        display:inline-block;
+        overflow:hidden;
+    }
+    #chordDiagram {
+        float:left;
+    }
+
+    #graph2 {
+        float:right;
+    }
+
+    #xaxisform{
+        position: relative;
+        left: 1050px;
+        top:-240px;
+
+    }
+
+    .axes {
+        font-family: "Nanum Gothic";
+        font-size: 15px;
+    }
+
+    select {
+        font-size:20px;
+        font-family: "Nanum Gothic";
+    }
+
+    .dot {
+        cursor:pointer;
+    }
+
+    .button {
+        font-family:"Nanum Gothic";
+        font-size: 20px;
+        background-color: #4e5663;
+        color: white;
+        border-radius:10px;
+        cursor:pointer;
+        padding:10px;
+        margin-top:30px;
+        outline:none;
+
+    }
+    h1 {
+        padding-top: 30px;
+        margin-bottom:-30px;
+        font-family:Riesling;
+        font-size:70px;
+    }
+
+    h3 {
+        padding: 0px 200px;
+        font-weight:lighter;
+        font-style:italic;
+    }
+    .instr p {
+        color:#999b9e;
+        font-size:13px;
+        font-weight:lighter;
+        font-style:italic;
+        text-align:center;
+    }
+
+
+</style>
+
+<body>
+<center><h1>WHAT SHOULD WE WATCH NEXT?</h1>
+  <p>Presented by Abraham Ghanimah, Anna Tedijanto, and Mishcat Ibrahim</p>
+    <h3> A visualization of the most popular actors and actresses of our time, their movies, and recommendations for your next movie night!</h3>
+<hr>
+<button onclick="showAll()" class="button">Reset Selections </button></center>
+
+<div class="instr"><p style="float:left;padding-left:40px;margin-top:-40px;width:100px;">Hover over an actor to see who else they've acted with.</p>
+<p style="float:right;margin-top:-30px;width:250px;margin-right: 150px;">Hover over a movie to see more info about it.
+Click on a movie and the Top 50 actors in it will be highlighted on the chart to the left.</p></div></div>
+<div id="wrapper" style="width:1650px;margin-top:-50px;">
+
+    <div id="chordDiagram" style="width:650;">
+
+
+    </div>
+
+
+      <div id="graph2">
+
+
+      </div>
+
+
+
+</div>
+
+
+
+<div id="xaxisform">
+<!--reference: https://stackoverflow.com/questions/15556762/javascript-function-run-with-drop-down-list-->
+ <form>
+ <select id=xaxischoose onchange="makeScatterPlot(this)">
+
+    <option> Movie Rating </option>
+    <option> Release Date </option>
+    <option> Budget </option>
+</select>
+</form>
+
+</div>
+
+<div id="quiz" style="position:absolute; left:1%; margin-top:-250px;">
+  <h2> Movie Recommendation Tool </h2>
+  <div class="instr"><p style="width:400px;">Click one or more actors to get movie recommendations with our movie recommendation tool! You can unselect an actor if you find the new options too limited. Feel free to filter your movie recommendations out by genre!</p></div>
+  <p> Genres:
+  <select id="genreDropDown" onchange="filterMovieList()">
+    <option value="all"> Show All</option>
+    <option value="music"> Music</option>
+    <option value="romance"> Romance</option>
+    <option value="family"> Family</option>
+    <option value="war"> War</option>
+    <option value="foreign"> Foreign</option>
+    <option value="TV Movie"> TV </option>
+    <option value="adventure"> Adventure</option>
+    <option value="fantasy"> Fantasy</option>
+    <option value="animation"> Animation</option>
+    <option value="drama"> Drama</option>
+    <option value="horror"> Horror</option>
+    <option value="action"> Action </option>
+    <option value="comedy"> Comedy</option>
+    <option value="history"> History</option>
+    <option value="western"> Western</option>
+    <option value="thriller"> Thriller</option>
+    <option value="crime"> Crime</option>
+    <option value="science fiction"> Science Fiction </option>
+    <option value="mystery"> Mystery</option>
+    <option value="documentary"> Documentary</option>
+  </select>
+  </p>
+  <h2>Selected Actors' Movies</h2>
+  <div id="quizResults">
+    <p class="result">No Results</p>
+    <table>
+      <tr id="resultsRow1"></tr>
+      <tr id="resultsRow2"></tr>
+      <tr id="resultsRow3"></tr>
+    </table>
+  </div>
+</div>
+
+<!-- for the chord diagram -->
+
+
+
+
+
+
+<script>
+
+var actors = {};
+var actresses = {};
+var movies = {};
+var awardWinners = {};
+var allPeople = [];
+var top50 = [];
+var top50Matrix = [];
+var awards = [];
+
+
+var moviesCombined=[];
+var moviesToPlot=[]
+var moviesToPlot2=[]
+
+var music_movies=[];
+var romance_movies=[];
+var family_movies=[];
+var war_movies = [];
+var foreign_movies = [];
+var tv_movie_movies=[];
+var adventure_movies = [];
+var fantasy_movies=[];
+var animation_movies=[];
+var drama_movies = [];
+var horror_movies=[];
+var action_movies=[];
+var comedy_movies=[];
+var history_movies = [];
+var western_movies=[];
+var thriller_movies = [];
+var crime_movies = [];
+var science_fiction_movies=[];
+var mystery_movies = [];
+var documentary_movies=[];
+
+var allMovies=[]
+
+var highlightedActors=[];
+
+var height = 1000;
+var width = 900;
+var padding = 200;
+
+d3.json("all_data_2.json", function (error, data) {
+    if (error) return console.warn(error);
+    // actors = data["actors"];
+    // actresses = data["actresses"];
+    movies = data["movies"];
+    awards = data["awards"];
+    awardWinners = data["awardWinners"];
+    allPeople = data["allPeople"];
+    top50 = data["top50"];
+    moviesCombined = data["moviesCombined"];
+    music_movies = data["music_movies"];
+    romance_movies = data["romance_movies"];
+    family_movies = data["family_movies"];
+    war_movies = data["family_movies"];
+    foreign_movies = data["foreign_movies"];
+    tv_movie_movies = data["tv_movie_movies"];
+    adventure_movies = data["adventure_movies"];
+    fantasy_movies = data["adventure_movies"];
+    animation_movies = data["animation_movies"];
+    drama_movies = data["drama_movies"];
+    horror_movies = data["horror_movies"];
+    action_movies = data["action_movies"];
+    comedy_movies = data["comedy_movies"];
+    history_movies = data["history_movies"];
+    western_movies = data["western_movies"];
+    thriller_movies = data["thriller_movies"];
+    crime_movies = data["crime_movies"];
+    science_fiction_movies = data["science_fiction_movies"];
+    mystery_movies = data["mystery_movies"];
+    documentary_movies = data["documentary_movies"];
+
+    // console.log(data);
+    callback();
+
+});
+
+var svg2=d3.select(document.getElementById("graph2"))
+    .append("svg")
+    .attr("height", height)
+    .attr("width", width)
+    .style("padding-top", "0px")
+    .style("padding-left", "100px");
+
+
+function numRelated(a1, a2) {
+    var a1Movs = top50[a1].moviesAppearedIn;
+    var a2Movs = top50[a2].moviesAppearedIn;
+    var numRelated = 0;
+    a1Movs.forEach(function (d) {
+        if (a2Movs.includes(d)) {
+            numRelated++;
+        }
+    })
+    return numRelated;
+}
+
+// universal color scales
+var color = d3.scaleOrdinal()
+    .domain([1, 2, 3, 4])
+    .range(["#206a7c","#f44253", "#411172", "#75c4c0"]);
+
+var outlineColor = d3.scaleOrdinal()
+    .domain([1, 2, 3])
+    .range(["#174e5b","#b7313e", "#22083d"]);
+
+// color scales for genre
+var colorGenre = d3.scaleOrdinal()
+    .domain(["drama", "family", "action", "adventure", "comedy", "other"])
+    .range(["#e6194b", "#f58231", "#16997e", "#206bb2", "#5e15b2", "#666468"]);
+
+var genreList = ["drama", "family", "action", "adventure", "comedy", "other"];
+function getGenreCol(genres) {
+    // console.log(movies);
+
+    for (var i = 0; i < genres.length; i++) {
+        if (genreList.includes(genres[i])) {
+            return colorGenre(genres[i]);
+        }
+    }
+    return colorGenre("other");
+}
+
+function callback() {
+
+
+    // åCHORD DIAGRAM
+    var cd = d3.select("#chordDiagram");
+    var svg = cd.append("svg")
+        .attr("width", 550)
+        .attr("height", 550)
+        .style("padding-left", 90)
+        .style("padding-bottom", 65)
+        .style("padding-right", 50)
+        .style("padding-top", 130);
+
+
+    for (var i = 0; i < 50; i++) {
+        top50Matrix[i] = new Array(50);
+    }
+
+    top50.forEach(function (d, i) {
+        top50.forEach(function (e, j) {
+            if (i != j) {
+                top50Matrix[i][j] = numRelated(i, j);
+            }
+            else {
+                top50Matrix[i][j] = 0;
+            }
+        })
+    })
+
+    var chord = d3.chord()
+        .padAngle(0.02)
+        .sortSubgroups(d3.descending);
+
+    var test = chord(top50Matrix);
+
+    var width2 = 500,
+    height2 = 500,
+    outerRadius = Math.min(width2, height2) * 0.5 - 40,
+    innerRadius = outerRadius - 30;
+    var formatValue = d3.formatPrefix(",.0", 1e3);
+
+
+    var arc = d3.arc()
+        .innerRadius(innerRadius)
+        .outerRadius(outerRadius);
+
+
+    var ribbon = d3.ribbon()
+        .radius(innerRadius);
+
+
+    var g = svg.append("g")
+        .attr("transform", "translate(" + width2 / 2 + "," + height2 / 2 + ")")
+        .datum(test);
+
+    var group = g.append("g")
+        .attr("class", "groups")
+        .selectAll("g")
+        .data(function(chords) {
+            return chords.groups;
+        })
+        .enter().append("g");
+
+    group.append("path")
+        .style("fill", function (d) { return color(top50[d.index].gender);})
+        .style("stroke", function (d) {return color(top50[d.index].gender);})
+        .style("stroke-width", 0)
+        .style("opacity", 0.5)
+        .attr("d", arc)
+        .on("mouseover", fade(0.9, 0.9))
+        .on("mouseout", fade(0.1, 0.5))
+        .on("click", function(d) {selectActive(d)});
+
+    group.append("text")
+      .each(function(d) { d.midangle = (d.startAngle + d.endAngle) / 2; })
+      .attr("dy", ".35em")
+      .attr("transform", function(d) {
+        return "rotate(" + (d.midangle * 180 / Math.PI - 90) + ")"
+            + "translate(" + (outerRadius + 5) + ")"
+            + (d.midangle > Math.PI ? "rotate(180)" : "");
+      })
+      .style("text-anchor", function(d) { return d.midangle > Math.PI ? "end" : null; })
+      .text(function(d) { return top50[d.index].name; })
+      .style('fill', "black")
+      .style("font-size", "12px");
+
+    g.append("g")
+        .attr("class", "ribbons")
+        .selectAll("path")
+        .data(function(chords) {
+            for (var i = 0; i < chords.length; i++) {
+                chords[i].source.active = 0;
+            }
+            return chords; })
+        .enter().append("path")
+        .attr("d", ribbon)
+        .style("fill", function(d) {
+            if (top50[d.source.index].gender != top50[d.target.index].gender) return color(3);
+            return color(top50[d.source.index].gender);
+        })
+        .style("opacity", 0.1)
+        .style("stroke", function(d) {
+            if (top50[d.source.index].gender != top50[d.target.index].gender) return color(3);
+            return color(top50[d.source.index].gender);
+        });
+
+    svg.append("line")
+    .attr("x1", 0)
+    .attr("y1", -100)
+    .attr("x2", 0)
+    .attr("y2", 20)
+    .style("stroke", "#9c9d9e")
+    .style("stroke-width", 2);
+
+    svg.append("line")
+    .attr("x1", 0)
+    .attr("y1", 19)
+    .attr("x2", 30)
+    .attr("y2", 20)
+    .style("stroke", "#9c9d9e")
+    .style("stroke-width", 2);
+
+    svg.append("circle")
+    .attr("cx", 30)
+    .attr("cy", 20)
+    .attr("r", 4)
+    .style("fill", "#9c9d9e")
+
+    svg.append("rect")
+    .attr("x", 20)
+    .attr("y", 570)
+    .attr("width", 30)
+    .attr("height", 10)
+    .style("fill", color(2))
+    .style("opacity", 0.5);
+
+    svg.append("text")
+    .attr("x", 55)
+    .attr("y", 578)
+    .text("Actress")
+    .style("font-size", "13px")
+    .style("fill", "#9c9d9e");
+
+    svg.append("rect")
+    .attr("x", 20)
+    .attr("y", 600)
+    .attr("width", 30)
+    .attr("height", 10)
+    .style("fill", color(1))
+    .style("opacity", 0.5);
+
+    svg.append("text")
+    .attr("x", 55)
+    .attr("y", 610)
+    .text("Actor")
+    .style("font-size", "13px")
+    .style("fill", "#9c9d9e");
+
+
+
+
+    function fade(opacity, fillOp) {
+        return function(g, i) {
+
+            svg.selectAll(".ribbons path")
+                .filter(function(d) {return (d.source.index == i || d.target.index == i) && d.source.active == 0})
+                .transition()
+                .duration(0.5)
+                .style("opacity", function (d) {
+                    return opacity;
+                });
+
+            svg.selectAll(".groups path")
+                .filter(function(d) {return d.index == i && top50[d.index].active == 0;})
+                .transition()
+                .duration(0.5)
+                .style("opacity", function (d) {
+                    return fillOp;
+                });
+        }
+
+    }
+
+  for(i=0; i<50; i++){
+    moviesToPlot.push(top50[i].moviesAppearedIn);
+
+  }
+
+  moviesToPlot=Array.from(new Set( [].concat.apply([], moviesToPlot)));
+  for (i=0; i<moviesToPlot.length; i++){
+   if(movies[moviesToPlot[i]] != undefined && movies[moviesToPlot[i]] != null){
+    moviesToPlot2.push(moviesToPlot[i]);
+   }
+  }
+
+    plotRatingsScatterGraph(moviesToPlot2);
+    drawLegend();
+
+}
+
+
+/* Selects which actors are "active", which means they have been clicked on */
+function selectActive(act) {
+
+    var svg = d3.select("#chordDiagram svg");
+
+    var i = act.index;
+    if (top50[i].active == 0) {
+        top50[i].active = 1;
+    } else {
+        top50[i].active = 0;
+    }
+
+
+    svg.selectAll("g")
+        .select(".groups")
+        .selectAll("path")
+        .style("opacity", function(d) {
+            if (top50[d.index].active == 1) {
+                return 0.9;
+            }
+            return 0.5;
+        });
+
+    svg.selectAll("g")
+        .select(".ribbons")
+        .selectAll("path")
+        .style("opacity", function (d) {
+            if (top50[d.source.index].active == 1 && top50[d.target.index].active == 1){
+                d.source.active = 1;
+                return 0.9;
+            }
+            return 0.1;
+
+        });
+    var svg2 = d3.select("#graph2");
+
+    svg2.selectAll(".dot")
+        .attr("fill", function(d) {return getGenreCol(movies[d].Genres);});
+
+    highlightActors([]);
+    updateMovieList();
+}
+
+function showAll() {
+    var svg = d3.select("#chordDiagram svg");
+    svg.selectAll("g")
+        .select(".ribbons")
+        .selectAll("path")
+        .style("opacity", function (d) {
+            d.source.active = 0;
+            return 0.1;
+
+        });
+    svg.selectAll("g")
+        .select(".groups")
+        .selectAll("path")
+        .style("fill", function (d) {
+            top50[d.index].active = 0;
+            return color(top50[d.index].gender);
+        })
+        .style("opacity", 0.5);
+
+    svg.selectAll("g")
+        .select(".groups")
+        .selectAll("text")
+        .style("fill", "black")
+        .style("font-size", "12px");
+
+    var svg2 = d3.select("#graph2");
+
+    svg2.selectAll(".dot")
+        .attr("fill", function(d) {return getGenreCol(movies[d].Genres);});
+
+    updateMovieList();
+}
+
+
+/* Updates the list of actors that need to be highted and calls redrawChord */
+function highlightActors(arr){
+    highlightedActors=arr;
+    var svg = d3.select("#chordDiagram svg");
+    svg.selectAll("g")
+        .select(".groups")
+        .selectAll("text")
+        .style('fill', function(d){if (highlightedActors==[]){return "black"}
+                                else if (highlightedActors.indexOf(top50[d.index].name) > -1){
+                                    if (top50[d.index].gender == 1) return color(4)
+                                    else return color(2);
+                                }
+                                else{return "black";}})
+        .style('font-weight', function(d){if (highlightedActors==[]){return "black"}
+                                        else if (highlightedActors.indexOf(top50[d.index].name) > -1){return "bold";}})
+        .style("font-size", function(d){if (highlightedActors==[]){return "black";}
+                                      else if (highlightedActors.indexOf(top50[d.index].name) > -1){return "15px";}
+                                      else{return "12px";}});
+    updateMovieList();
+}
+
+  var y = d3.scaleLinear()
+  .domain([0, 1600000000])
+  .range([height - padding, padding]);
+
+  var siFormat = d3.format(".0s");
+  var customTickFormat = function (d){
+    return siFormat(d).replace("G", "B");
+  };
+  var yAxis = d3.axisLeft(y).ticks(20)
+        .tickFormat(d3.formatPrefix(".1", 1e8));
+
+
+/* Creates a scatter plot where the x axis is the movie rating */
+function plotRatingsScatterGraph(arr){
+
+
+  var x =  d3.scaleLinear()
+  .domain([0,10])
+  .range([60, width-300]);
+
+
+
+  var xAxis = d3.axisBottom().scale(x).ticks(10);
+
+
+  svg2.selectAll("*").remove();
+
+var div = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  var g = svg2.selectAll(".dot")
+    .data(arr)
+    .enter()
+    .filter(function(d){ return movies[d] != undefined;})
+    .append("g")
+
+    var activeMovie = "";
+    g.append("circle")
+        .attr("class", "dot")
+        .attr("r", 5)
+        .attr("cx", function(d) {return x(movies[d].Rating);})
+        .attr("cy", function(d) {return y(movies[d].Revenue) - 100;})
+        .attr("fill", function(d) {return getGenreCol(movies[d].Genres);})
+        .attr("stroke", "black")
+        .style("opacity", 0.8)
+        .on("click", function(d) {
+            activeMovie = d;
+            showAll();
+
+            svg2.selectAll(".dot")
+                .attr("fill", function(d) {
+                    console.log(d);
+                    if (d != activeMovie) {
+                        return getGenreCol(movies[d].Genres);
+                    } else {
+                        return "white";
+                    }
+                })
+        highlightActors(movies[d].movieStars);
+          })
+/*      .on("mousemove", function(d){
+         document.getElementById("p1").innerHTML =("Movie: "+movies[d].Name);
+         document.getElementById("p2").innerHTML =("Revenue: $" + (movies[d].Revenue).toString() );
+         document.getElementById("p3").innerHTML =("Rating: " + movies[d].Rating.toString());
+      })*/
+      .on("mouseover", function(d) {
+       div.transition()
+         .duration(200)
+         .style("opacity", .9);
+       div.html("<br/>" +"Movie: "+movies[d].Name + "<br/>" + "Revenue: $" + (movies[d].Revenue).toString() + "<br/>" + "Rating: " + movies[d].Rating.toString())
+         .style("left", (d3.event.pageX) + "px")
+         .style("top", (d3.event.pageY - 28) + "px");
+         d3.select(this)
+            .attr("fill", "white");
+       })
+       .on("mouseout", function(d) {
+       div.transition()
+         .duration(10)
+         .style("opacity", 0);
+            d3.select(this)
+            .attr("fill",  function(d) {
+                if (activeMovie != d) {return getGenreCol(movies[d].Genres);}
+                else return "white";
+
+            });
+       });;
+
+    svg2.append("g")
+    .attr("class", "axes")
+    .attr("transform", "translate(0 , 705)")
+    .call(xAxis)
+
+    svg2.append("g")
+     .attr("class", "axes")
+     .attr("transform","translate(60,-95)")
+     .call(yAxis)
+
+    svg2.append("text")
+      .attr("x", 250)
+      .attr("y", height-padding-50)
+      // .attr("transform", "rotate(90)")
+      .text("Average Rating (from TMDB)")
+      .style("font-size", "20px")
+    svg2.append("text")
+      .attr("x", -450)
+      .attr("y", -30)
+      .attr("transform", "rotate(-90)")
+      .text("Revenue in Dollars")
+      .style("font-size", "20px");
+
+    svg2.append("line")
+    .attr("x1", 400)
+    .attr("x2", 400)
+    .attr("y1", 45)
+    .attr("y2", 130)
+    .attr("stroke", "#9c9d9e")
+    .attr("stroke-width", 2);
+
+    svg2.append("circle")
+    .attr("cx", 400)
+    .attr("cy", 130)
+    .attr("r", 4)
+    .style("fill", "#9c9d9e");
+
+};
+
+
+/* Creates a scatter plot where the x axis is the movie budget */
+function plotBudgetScatterGraph(arr){
+
+  var x =  d3.scaleLinear()
+  .domain([(d3.min(arr, function(d) { if (movies[d] != undefined){return movies[d].Budget;} })),(d3.max(arr, function(d) { if (movies[d] != undefined){return movies[d].Budget;} }))])
+  .range([60, width-300]);
+
+
+  var xAxis = d3.axisBottom()
+                .scale(x)
+                .tickFormat(customTickFormat);
+
+
+  svg2.selectAll("*").remove();
+
+  var div = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  var g = svg2.selectAll(".dot")
+    .data(arr)
+    .enter()
+    .filter(function(d){ return movies[d] != undefined;})
+    .append("g")
+
+    var activeMovie = "";
+    g.append("circle")
+        .attr("class", "dot")
+        .attr("r", 5)
+        .attr("opacity", 0.8)
+        .attr("cx", function(d) {return x(movies[d].Budget);})
+        .attr("cy", function(d) {return y(movies[d].Revenue) - 100;})
+        .attr('fill', function(d) {return getGenreCol(movies[d].Genres);})
+        .attr("stroke", "black")
+        .on("click", function(d) {
+            showAll();
+            activeMovie = d;
+
+            svg2.selectAll(".dot")
+                .attr("fill", function(d) {
+                    console.log(d);
+                    if (d != activeMovie) {
+                        return getGenreCol(movies[d].Genres);
+                    } else {
+                        return "white";
+                    }
+                })
+
+            highlightActors(movies[d].movieStars);
+        })
+        .on("mouseover", function(d) {
+            div.transition()
+                .duration(200)
+                .style("opacity", .9);
+            div.html("<br/>" + "Movie: "+movies[d].Name + "<br/>" + "Revenue: $" + (movies[d].Revenue).toString() + "<br/>" + "Budget: $" + movies[d].Budget.toString())
+            .style("left", (d3.event.pageX) + "px")
+            .style("top", (d3.event.pageY - 28) + "px");
+            d3.select(this)
+                .attr("fill", "white");
+       })
+      .on("mouseout", function(d) {
+       div.transition()
+         .duration(10)
+         .style("opacity", 0);
+        d3.select(this)
+            .attr("fill", function(d) {
+                if (activeMovie != d) {
+                    return getGenreCol(movies[d].Genres)
+                } else return "white";
+            });
+       });;
+/*      .on("mousemove", function(d){
+         document.getElementById("p1").innerHTML =("Movie: "+movies[d].Name);
+         document.getElementById("p2").innerHTML =("Revenue: $" + (movies[d].Revenue).toString() );
+         document.getElementById("p3").innerHTML =("Budget: $" + movies[d].Budget.toString() );
+      });*/
+
+    svg2.append("g")
+     .attr("class", "axes")
+      .attr("transform", "translate(0 , 705)")
+      .call(xAxis)
+
+    svg2.append("g")
+     .attr("class", "axes")
+     .attr("transform","translate(60,-95)")
+     .call(yAxis)
+
+
+    svg2.append("text")
+      .attr("x", 300)
+      .attr("y", height-padding-50)
+      // .attr("transform", "rotate(90)")
+      .text("Budget in Dollars")
+      .style("font-size", "20px");
+    svg2.append("text")
+      .attr("x", -450)
+      .attr("y", -30)
+      .attr("transform", "rotate(-90)")
+      .text("Revenue in Dollars")
+      .style("font-size", "20px");
+
+    svg2.append("line")
+    .attr("x1", 400)
+    .attr("x2", 400)
+    .attr("y1", 45)
+    .attr("y2", 130)
+    .attr("stroke", "#9c9d9e")
+    .attr("stroke-width", 2);
+
+    svg2.append("circle")
+    .attr("cx", 400)
+    .attr("cy", 130)
+    .attr("r", 4)
+    .style("fill", "#9c9d9e");
+
+
+
+}
+
+
+/* Creates a scatter plot where the x axis is the movie release date */
+function plotReleaseDateScatterGraph(arr){
+ // console.log(arr.length);
+  var x =  d3.scaleLinear()
+  .domain([(d3.min(arr, function(d) { if (movies[d] != undefined && movies[d]!=null){
+  return (parseFloat(movies[d].ReleaseDate.slice(0,4))+parseFloat((movies[d].ReleaseDate.slice(5,7))/12)+parseFloat((movies[d].ReleaseDate.slice(8,10))/365));} })),(d3.max(arr, function(d) { if (movies[d] != undefined && movies[d]!=null){
+  return (parseFloat(movies[d].ReleaseDate.slice(0,4))+parseFloat((movies[d].ReleaseDate.slice(5,7))/12)+parseFloat((movies[d].ReleaseDate.slice(8,10))/365));} }))])
+  .range([60, width-300]);
+
+
+  var xAxis = d3.axisBottom().scale(x).ticks(10).tickFormat(d3.format("d"));
+  svg2.selectAll("*").remove();
+
+  var div = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  var g = svg2.selectAll(".dot")
+    .data(arr)
+    .enter()
+    .filter(function(d){ return movies[d] != undefined ;})
+
+    .append("g")
+
+    var activeMovie = "";
+    g.append("circle")
+      .attr("class", "dot")
+      .attr("r", 5)
+      .attr("opacity", 0.8)
+      .attr("cx", function(d) {return x(parseFloat(movies[d].ReleaseDate.slice(0,4))+parseFloat((movies[d].ReleaseDate.slice(5,7))/12)+parseFloat((movies[d].ReleaseDate.slice(8,10))/365));})
+      .attr("cy", function(d) {return y(movies[d].Revenue) - 100;})
+      .attr('fill', function(d) {return getGenreCol(movies[d].Genres);})
+      .attr("stroke", "black")
+      .on("click", function(d) {
+            showAll();
+            activeMovie = d;
+
+            svg2.selectAll(".dot")
+                .attr("fill", function(d) {
+                    console.log(d);
+                    if (d != activeMovie) {
+                        return getGenreCol(movies[d].Genres);
+                    } else {
+                        return "white";
+                    }
+                })
+                    highlightActors(movies[d].movieStars);
+                })
+      .on("mouseover", function(d) {
+        // console.log(movies[d]==undefined)
+        div.transition()
+         .duration(200)
+         .style("opacity", .9);
+        div.html("<br/>" + "Movie: "+movies[d].Name + "<br/>" + "Revenue: $" + (movies[d].Revenue).toString() + "<br/>" + "Release Date:" +
+         movies[d].ReleaseDate.slice(5,7) + "/"+  movies[d].ReleaseDate.slice(8,10) + "/" + movies[d].ReleaseDate.slice(0,4))
+         .style("left", (d3.event.pageX) + "px")
+         .style("top", (d3.event.pageY - 28) + "px");
+         d3.select(this)
+            .attr("fill", "white");
+
+       })
+        .on("mouseout", function(d) {
+            div.transition()
+                .duration(10)
+                .style("opacity", 0);
+            d3.select(this)
+                .attr("fill", function(d) {
+                    if (activeMovie != d) return getGenreCol(movies[d].Genres);
+                    else return "white";
+                })
+
+       });;
+/*      .on("mousemove", function(d){
+         document.getElementById("p1").innerHTML =("Movie: "+movies[d].Name);
+         document.getElementById("p2").innerHTML =("Revenue: $" + (movies[d].Revenue).toString() );
+         document.getElementById("p3").innerHTML =("Release Date: " + movies[d].ReleaseDate.slice(5,7) + "/"+  movies[d].ReleaseDate.slice(8,10) + "/" + movies[d].ReleaseDate.slice(0,4));
+         console.log(movies[d].movieStars)
+      });*/
+
+    svg2.append("g")
+     .attr("class", "axes")
+    .attr("transform", "translate(0 , 705)")
+    .call(xAxis)
+
+    svg2.append("g")
+     .attr("class", "axes")
+    .attr("transform","translate(60,-95)")
+    .call(yAxis)
+
+   svg2.append("text")
+      .attr("x", 300)
+      .attr("y", height-padding-50)
+      // .attr("transform", "rotate(90)")
+      .text("Release Date")
+      .style("font-size", "20px")
+    svg2.append("text")
+      .attr("x", -450)
+      .attr("y", -30)
+      .attr("transform", "rotate(-90)")
+      .text("Revenue in Dollars")
+      .style("font-size", "20px");
+
+    svg2.append("line")
+    .attr("x1", 400)
+    .attr("x2", 400)
+    .attr("y1", 45)
+    .attr("y2", 130)
+    .attr("stroke", "#9c9d9e")
+    .attr("stroke-width", 2);
+
+    svg2.append("circle")
+    .attr("cx", 400)
+    .attr("cy", 130)
+    .attr("r", 4)
+    .style("fill", "#9c9d9e");
+
+
+
+};
+
+
+
+/* Reads the input from the x-axis drop down menu to choose a variable for the x axis for the graph */
+//Reference: https://stackoverflow.com/questions/15556762/javascript-function-run-with-drop-down-list
+function makeScatterPlot(option){
+    if (option.value=="Movie Rating"){
+        plotRatingsScatterGraph(moviesToPlot2);
+        drawLegend();
+
+    }
+    else if (option.value=="Budget"){
+        plotBudgetScatterGraph(moviesToPlot2);
+        drawLegend();
+    }
+    else if (option.value=="Release Date"){
+        plotReleaseDateScatterGraph(moviesToPlot2);
+        drawLegend();
+    }
+
+
+}
+
+/**
+Draws the color legend for the different genres on the scatterplot svg
+**/
+function drawLegend() {
+  var legendW = 125;
+  var legendH = 150
+
+  var offsetX = padding / 2;
+  var offsetY = padding / 2;
+
+  svg2.append("rect")
+  .attr("x",offsetX).attr("y",offsetY)
+  .attr("height",legendH).attr("width",legendW)
+  .attr("stroke","#999b9e")
+  .attr("stroke-width", 2)
+  .attr("fill","#efefef");
+  svg2.append("text")
+  .attr("x",(legendW / 2) + offsetX).attr("y",14 + offsetY)
+  .text("Genre Legend")
+  .style("alignment-baseline", "middle")
+  .style("text-anchor","middle");
+
+  var keys = ["Drama", "Family", "Action", "Adventure", "Comedy", "Other"];
+
+  for (var i = 0; i < 6; i++){
+    svg2.append("text")
+    .attr("x", (legendW / 2) + offsetX).attr("y",14 + ((i + 1)*20) + offsetY)
+    .text(keys[i])
+    .style("alignment-baseline", "middle")
+    .style("text-anchor","middle")
+    .style("fill", getGenreCol([keys[i].toLowerCase()]));
+  }
+}
+
+//The movies in the current view
+var moviesInView = [];
+
+/**
+Sorts movies by rating
+**/
+function sortMovies(movs) {
+  if (movs.length == 0){
+    return movs;
+  }
+  return movs.sort(function(a,b) {
+    if (movies[b] == undefined || movies[a] == undefined) {
+        return 0;
+    }
+    return (movies[b]["Rating"] - movies[a]["Rating"]);
+  });
+}
+
+/**
+Draws the movie info elements to the div above
+**/
+function draw(movs) {
+  //Clear old results
+  var oldResults = document.getElementsByClassName("result");
+  while (oldResults.length > 0){
+    oldResults[0].parentNode.removeChild(oldResults[0]);
+  }
+  //Add new results
+  var div = document.getElementById("quizResults");
+  var topK = 12;
+  //maps the position of the element in the list to a row in the table
+  var tableScale = function (k) {
+    k = (-1) * (k - 12);
+    if (k <= 3) {
+      return "1";
+    }
+    else if (k <= 7){
+      return "2";
+    }
+    else {
+      return "3";
+    }
+  };
+  if (movs.length == 0){
+    var e = document.createElement("div");
+    e.classList.add("result");
+    e.innerHTML = "<p>No Results</p>";
+    div.appendChild(e);
+  }
+  else {
+    movs.forEach(function(d) {
+      if (topK > 0) {
+        div = document.getElementById("resultsRow" + tableScale(topK));
+        var e = document.createElement("td");
+        e.classList.add("result");
+        if (movies[d] != undefined){
+            if (movies[d]["Link"] != ""){
+              e.innerHTML = "<p style='border:solid; border-radius:7px; color:white; border-color:black; padding:10px;background-color:" + getGenreCol(movies[d]["Genres"]) + "'><a style='color:white' href ='" + movies[d]["Link"] + "' target = '_blank'>" + movies[d]["Name"] + "</a> - Rating: " + movies[d]["Rating"] + "</p>";
+            }
+            else {
+              e.innerHTML = "<p style='border:solid; border-radius:7px; color:white; border-color:black; padding:10px;background-color:" + getGenreCol(movies[d]["Genres"]) + "'>" + movies[d]["Name"] + " - Rating: " + movies[d]["Rating"] + "</p>";
+            }
+            div.appendChild(e);
+            topK -= 1;
+        }
+      }
+    });
+  }
+}
+
+/**
+This function is called whenever an actor is clicked in the actor relationship
+graph.
+**/
+function updateMovieList() {
+  //set drop down box to show all
+  document.getElementById("genreDropDown").value = "all";
+  //get all movies
+  var moviesByActors = []
+  var results = []
+  top50.forEach(function (d) {
+    //d is an actor
+    if (d.active) {
+      moviesByActors.push(d.moviesAppearedIn);
+    }
+  });
+  //find intersection of actor's movies
+  for (var i = 0; i < moviesByActors.length; i++) {
+    if (i == 0) {
+      results = moviesByActors[i].concat();
+    }
+    else {
+      var temp = results.concat();
+      temp.forEach(function(d) {
+        if (!moviesByActors[i].includes(d)) {
+          results.splice(results.indexOf(d),1);
+        }
+      });
+    }
+  }
+  //remove movies from the list if they aren't in the movies data structure
+  var temp = results.concat();
+  temp.forEach(function(d) {
+    if (movies[d] == null) {
+      results.splice(results.indexOf(d),1);
+    }
+  });
+  //sort results
+  var sorted = sortMovies(results);
+  moviesInView = sorted.concat();
+  //draw sorted results
+  draw(sorted);
+}
+
+/**
+This function is called whenever an item from the drop down menu is selected
+**/
+function filterMovieList() {
+  var genre = document.getElementById("genreDropDown").value;
+  var filtered = moviesInView.concat();
+  if (genre != "all") {
+    filtered = moviesInView.filter(d => movies[d]["Genres"].includes(genre));
+  }
+  draw(filtered);
+}
+
+d3.select("#genreDropDown").on("change", filterMovieList);
+</script>
+</body>
+</html>

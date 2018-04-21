@@ -1,0 +1,293 @@
+<html>
+<style>
+.button {
+    background-color: red;
+    stroke-width:1px;
+    stroke: black;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}   
+</style>
+<head>
+<title>CS 3300 Project 2</title>
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/styles/default.min.css">
+<link href="https://fonts.googleapis.com/css?family=Assistant" rel="stylesheet">
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+</head>
+
+<script>
+var actors = {};
+var actresses = {};
+var movies = {};
+var awardWinners = {};
+var allPeople = [];
+var top50 = [];
+var awards = [];
+    
+var moviesCombined=[];    
+// history = just 1, foreign = just 1, tv = 0
+    //adv,drama, horror, action, comedy
+var music_movies=[];
+var romance_movies=[];
+var family_movies=[];
+var war_movies = [];
+var foreign_movies = [];
+var tv_movie_movies=[];
+var adventure_movies = [];
+var fantasy_movies=[];
+var animation_movies=[];
+var drama_movies = [];
+var horror_movies=[];
+var action_movies=[];
+var comedy_movies=[];
+var history_movies = [];
+var western_movies=[];
+var thriller_movies = [];
+var crime_movies = [];
+var science_fiction_movies=[];
+var mystery_movies = [];
+var documentary_movies=[];
+var movie_array=[]
+function parseCreds(row) {
+    var cast = JSON.parse(row["cast"]);
+    cast.forEach(function (d) {
+        if (d.gender == 1) {
+            if (!(d.name in actresses)) {
+                actresses[d.name] = {"Movies": {}, "Awards": {}};
+                actresses[d.name]["Movies"][row["title"]] = d["character"];
+            }
+            else {
+                actresses[d.name]["Movies"][row["title"]] = d["character"];
+            }
+        }
+        else {
+            if (!(d.name in actors)) {
+                actors[d.name] = {"Movies": {}, "Awards": {}};
+                actors[d.name]["Movies"][row["title"]] = d["character"];
+            }
+            else {
+                actors[d.name]["Movies"][row["title"]] = d["character"];
+            }
+        }
+    });
+}
+function parseMovs(row) {
+    // var movie = JSON.parse(row[""])
+    var bud = parseInt(row["budget"]);
+    var rev = parseInt(row["revenue"]);
+    if (!(row["title"] in movies) && bud!= 0 && rev!= 0) {
+        var keywordsAr = [];
+        (JSON.parse(row["keywords"])).forEach( function (d) {
+            keywordsAr.push(d.name);
+        });
+        var genresAr = [];
+        (JSON.parse(row["genres"])).forEach(function (d) {
+            genresAr.push(d.name.toLowerCase());
+        })
+        movies[row["title"]] = {
+                                "Name": row["title"],
+                                "ReleaseDate": new Date(row["release_date"]),
+                                "Budget": bud,
+                                "Keywords": keywordsAr,
+                                "Genres": genresAr,
+                                "Revenue": rev,
+                                "Rating": parseFloat(row["vote_average"]),
+                                "NumVotes": parseInt(row["vote_count"]),
+                                "Awards": {},
+                                "Profit": rev - bud,
+                                "Link":row["homepage"],
+                                "movieStars":[],
+                                "femaleLead":false};
+    }
+}
+function parseAwards(data) {
+    return data;
+}
+function numRelated(a1, a2) {
+    var a1Movs = a1.gender == 1 ? actors[a1.name].Movies : actresses[a1.name].Movies;
+    var a2Movs = a2.gender == 1 ? actors[a2.name].Movies : actresses[a2.name].Movies;
+    var numRelated = 0;
+    for (var key in a1Movs) {
+        if (key in a2Movs) {
+            numRelated++;
+        }
+    }
+    return numRelated;
+}
+function makeMovieArrays(arr){
+   //console.log(arr);
+//    console.log(Object.keys(arr));
+//    console.log("b");
+    movies_length = Object.keys(arr).length;
+    for (i=0; i<movies_length; i++){
+     //console.log(arr[Object.keys(arr)[i]]);
+       // console.log(arr[Object.keys(arr)[i]].Genres[0]);
+        if ((arr[Object.keys(arr)[i]].Genres[0])=="music"){
+            music_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="romance"){
+            romance_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="family"){
+            family_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="war"){
+            war_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="foreign"){
+            foreign_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="TV Movie"){
+            tv_movie_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="adventure"){
+            adventure_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="fantasy"){
+            fantasy_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="animation"){
+            animation_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="drama"){
+            drama_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="horror"){
+            horror_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="action"){
+            action_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="comedy"){
+            comedy_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="history"){
+            history_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="western"){
+            western_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="thriller"){
+            thriller_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="crime"){
+            crime_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="science fiction"){
+            science_fiction_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="mystery"){
+            mystery_movies.push(arr[Object.keys(arr)[i]]);
+        }
+        else if ((arr[Object.keys(arr)[i]].Genres[0])=="documentary"){
+            documentary_movies.push(arr[Object.keys(arr)[i]]);
+        }
+    }
+}
+function callback(error, credits, movs, aw) {
+    makeMovieArrays(movies);
+    awards = aw.filter(d => d["Name"] in actors || d["Name"] in actresses || d["Film"] in movies);
+    for (var i = 0; i < awards.length; i++) {
+        if (String(awards[i]["Winner"]) == "1") {
+            var name = awards[i]["Name"];
+            var film = awards[i]["Film"];
+            var year = awards[i]["Year"];
+            var award = awards[i]["Award"];
+            if (name in actors) {
+                actors[name]["Awards"][award] = {"year": year, "movie": film};
+            }
+            else if (name in actresses) {
+                actresses[name]["Awards"][award] = {"year": year, "movie": film};
+            }
+            if (awards[i]["Film"] in movies) {
+                movies[film]["Awards"][award] = {"year": year, "movie": film};
+            }
+        }
+    }
+    for (var key in actors) {
+        var nummov = Object.keys(actors[key].Movies).length;
+        var all_movies = Object.keys(actors[key].Movies);
+        if (nummov > 30){
+            allPeople.push({"name": key, "num_movies": nummov, "gender": 1, "num_awards": Object.keys(actors[key].Awards).length, "active": 0, "moviesAppearedIn":all_movies});
+            moviesCombined.push(all_movies);
+            for (nm=0; nm<nummov; nm++){
+                // console.log(all_movies);
+                // console.log(all_movies[nm]);
+                // console.log(movies[all_movies[nm]]);
+                if (movies[all_movies[nm]] != null){
+                    movies[all_movies[nm]].movieStars.push(key);     
+                }
+               
+            }
+        }
+    }
+    for (var key in actresses) {
+        var nummov = Object.keys(actresses[key].Movies).length;
+        var all_movies = Object.keys(actresses[key].Movies);
+        if (nummov > 30) {
+            allPeople.push({"name": key, "num_movies": nummov, "gender": 2, "num_awards": Object.keys(actresses[key].Awards).length, "active": 0, "moviesAppearedIn":all_movies})
+            moviesCombined.push(all_movies);
+            for (nm2=0; nm2<nummov; nm2++){
+                if (movies[all_movies[nm2]] != null){
+                    movies[all_movies[nm2]].movieStars.push(key);     
+                }
+            }
+        }
+    }
+    
+    moviesCombined=Array.from(new Set( [].concat.apply([], moviesCombined)));
+    allPeople.sort(function(a,b) {
+        return a.num_movies-b.num_movies;
+    });
+    top50 = allPeople.slice(allPeople.length - 50);
+    var all_data = {
+        movies: movies,
+        awards: awards,
+        awardWinners: awardWinners,
+        allPeople:allPeople,
+        top50: top50,
+        moviesCombined: moviesCombined,    
+        music_movies: music_movies,
+        romance_movies: romance_movies,
+        family_movies: family_movies,
+        war_movies: family_movies,
+        foreign_movies: foreign_movies,
+        tv_movie_movies: tv_movie_movies,
+        adventure_movies: adventure_movies,
+        fantasy_movies: adventure_movies,
+        animation_movies: animation_movies,
+        drama_movies: drama_movies,
+        horror_movies: horror_movies,
+        action_movies: action_movies,
+        comedy_movies: comedy_movies,
+        history_movies: history_movies,
+        western_movies: western_movies,
+        thriller_movies: thriller_movies,
+        crime_movies: crime_movies,
+        science_fiction_movies: science_fiction_movies,
+        mystery_movies: mystery_movies,
+        documentary_movies: documentary_movies,
+        movie_array: movie_array
+    }
+    console.log("all done!");
+    var json = JSON.stringify(all_data)
+    try {
+        JSON.parse(json);
+    } catch (e) {
+        return false;
+    }
+    console.log(json);
+}
+d3.queue()
+.defer(d3.csv, "tmdb_5000_credit.csv", parseCreds)
+.defer(d3.csv, "tmdb_5000_movies.csv", parseMovs)
+.defer(d3.csv, "academy-award.csv", parseAwards)
+.await(callback);
+</script>

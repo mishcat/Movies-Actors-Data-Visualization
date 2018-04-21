@@ -1,0 +1,15 @@
+for chord diagram: https://bl.ocks.org/mbostock/1046712
+
+for chord diagram: http://bl.ocks.org/farazshuja/6225ffc34c23ade0de169c4d96252bbe
+
+for chord diagram: https://bl.ocks.org/mbostock/4062006
+
+for hover: http://bl.ocks.org/timvarga/8c45a928dc19a843d7ce30e45540728b
+
+for hide/show: http://bl.ocks.org/d3noob/5d621a60e2d1d02086bf
+
+update with button press: http://bl.ocks.org/d3noob/7030f35b72de721622b8
+
+for responsive dropdown menu: https://stackoverflow.com/questions/15556762/javascript-function-run-with-drop-down-list
+
+for merging and flattening lists: https://stackoverflow.com/questions/10865025/merge-flatten-an-array-of-arrays-in-javascript
